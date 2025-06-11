@@ -92,4 +92,48 @@ The script creates a CSV file with these columns:
 
 - **OpenAI API calls**: Uses ThreadPoolExecutor with 20 parallel workers by default (customizable with `-w`)
 - **Slack API**: Built-in rate limiting with exponential backoff and automatic retry
-- **Progress tracking**: Shows completion progress for all operations 
+- **Progress tracking**: Shows completion progress for all operations
+
+## Customization
+
+### Modify AI Prompts and Scoring
+
+You can easily customize the educational value scoring and summary generation by modifying the prompt in the `summarize_with_gpt()` method (around line 227 in `slack_message_extractor.py`). The current prompt focuses on technical/learning content, but you could adapt it for:
+
+- Different scoring criteria (e.g., sentiment analysis, urgency, project relevance)
+- Alternative summary styles (e.g., keyword extraction, humor, sentiment)
+- Custom scoring ranges or categories
+
+### Add Custom Output Fields
+
+To extract additional semantic metadata from your messages, you can:
+
+1. **Extend the `MessageSummary` model** (line 27) to include new fields
+2. **Update the prompt** to request the additional information
+3. **Modify the CSV output** in `save_to_csv()` method (line 528) to include your new fields
+
+Example: Add sentiment analysis, humor, or technical complexity scores.
+
+### Performance Tuning
+
+#### Speed Up Slack API Calls
+If you want faster Slack API queries, you can reduce the rate limiting delay by modifying `self.rate_limit_mean` (line 39). The default is 0.05 seconds between requests:
+
+```python
+self.rate_limit_mean = 0.02  # Faster queries (use responsibly)
+```
+
+#### Optimize OpenAI Calls
+Adjust the number of parallel workers with the `-w` flag based on your OpenAI rate limits:
+
+```bash
+python slack_message_extractor.py -w 30  # More parallel requests
+```
+
+### Performance Benchmarks
+
+For reference, extracting 222 messages from a single channel took:
+- **18 seconds** for Slack API queries (can be reduced with faster rate limiting)
+- **11 seconds** for OpenAI API processing (scales with parallel workers)
+
+> **Note**: Be respectful of API rate limits. Slack's API is generally more tolerant than others, but always monitor for rate limit errors in the output.
